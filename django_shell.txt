@@ -1,0 +1,67 @@
+1.
+
+    user1 = User.objects.create_user('username1')
+    user2 = User.objects.create_user(username='username2', password='admin', email='username1@gmail.com', first_name='Jake', last_name='Roberts')
+    
+2. 
+
+    author1 = Author.objects.create(user=user1)
+    author2 = Author.objects.create(user=user2)
+    
+3.
+ 
+    category1 = Category.objects.create(name='Policy')
+    category2 = Category.objects.create(name='Medicine')
+    category3 = Category.objects.create(name='Sport')
+    category4 = Category.objects.create(name='Economy')
+    
+4/5.
+
+    article1 = Post.objects.create(author=author1, type_post=ARTICLE, title='Bacon Ipsum', content='Bacon ipsum dolor amet ipsum laborum bacon voluptate ex, est meatloaf dolore fugiat burgdoggen in nisi brisket ut chuck. Sausage dolor biltong buffalo anim consectetur, kevin corned beef tail beef ribs. Turkey leberkas kielbasa consectetur biltong fugiat kevin pastrami turducken jowl exercitation tenderloin ut picanha voluptate. Dolore frankfurter esse aliqua. Turkey dolor nostrud beef, dolore tongue laborum veniam reprehenderit. Mollit cupidatat meatball, et ham hock tempor biltong proident. Boudin ham ut ullamco burgdoggen shankle dolore magna culpa meatball pork.')
+    article1.category.add(Category.objects.get(name='Policy'))
+    article2 = Post.objects.create(author=author2, type_post=ARTICLE, title='Test article', content='This is a test')
+    article2.category.add(category1, category2, category3, category4)
+    news1 = Post.objects.create(author=author1, type_post=NEWS, title='Breaking news', content='Beef ribs pastrami brisket picanha short ribs biltong t-bone beef venison. Beef ribs landjaeger ground round shank. Pastrami fatback ribeye, leberkas swine picanha kevin meatloaf porchetta spare ribs ball tip buffalo beef ribs. Strip steak pork belly tail, kielbasa ground round chuck porchetta. Pancetta corned beef filet mignon, hamburger capicola pork belly tail tenderloin chislic.')
+    news1.category.add(category4)
+
+6.
+
+    Comment.objects.create(post=article1, user=user2, content='Nice Article!!!')
+    Comment.objects.create(post=article1, user=user1, content='Thanks to everyone who helped me with writing this article.')
+    Comment.objects.create(post=article2, user=user1, content='Test Comment 0_0')
+    Comment.objects.create(post=news1, user=user2, content='Strange news...')
+    
+    
+7. 
+
+    Comment.objects.get(id=4).like()
+    Comment.objects.get(id=2).dislike()
+    Comment.objects.get(id=2).dislike()
+    article2.dislike()
+    article1.like()
+    article1.like()
+    news1.like()
+
+8.
+ 
+    author1.update_rating() 
+    author2.update_rating() 
+    
+9.
+
+    Author.objects.all().values('user__username', 'user_rating').order_by('-user_rating').first()
+    
+10.
+
+    best_rating_post = Post.objects.all().order_by('-rating').first()
+    f'Дата и время публикации: {best_rating_post.creation.strftime("%d.%m.%Y %H:%M")} | Автор: {best_rating_post.author.user.username} | Рейтинг: {best_rating_post.rating} | Заголовок {best_rating_post.title} | Превью {best_rating_post.preview()}'
+    
+11.
+
+    comments = best_rating_post.comment_set.all() 
+    for comment in comments:
+        print(f'{comment.creation.strftime("%d.%m.%Y %H:%M")} | Пользователь: {comment.user.username} | Рейтинг: {comment.rating} | Содержание: {comment.content}')
+    
+    
+    
+    
