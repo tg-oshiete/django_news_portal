@@ -1,0 +1,15 @@
+{% extends 'flatpages/sample.html' %}
+
+{%block title%}
+    New
+{%endblock title%}
+
+{%block body%}
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin:0; text-align: center; flex-grow: 1;">{{ new.title }}</h3>
+        <span style="text-align=right;">{{ new.creation | date:"d M Y H:i"}}</span>
+    </div>
+    <br>
+    <p style="font-size: 18px; text-align:left">{{ new.content }}</p>
+    <h6 style="text-align:right">Автор новости: {{ new.author.user.username }}</h6>
+{%endblock body%}
