@@ -8,6 +8,10 @@
 
 {%block body%}
     <h2>Новости:</h2>
+    <form action="" method="get">
+        {{ filterset.form.as_p }}
+        <input type="submit" value="Search" />
+    </form>
     <hr>
     {% if news %}
     <h5 align="left">Количество новостей: {{ news | length }}</h5>

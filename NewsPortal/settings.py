@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts',
     'articles',
     'editor',
+    'django_filters',
 ]
 
 SITE_ID = 1

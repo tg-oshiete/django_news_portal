@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
+
 
 ARTICLE = 'Article'
 NEWS = 'News'
@@ -31,7 +33,7 @@ class Category(models.Model):
 
 
 class Post(models.Model):
-    author = models.ForeignKey(Author, on_delete=models.DO_NOTHING)
+    author = models.ForeignKey(Author, on_delete=models.DO_NOTHING, null=True, blank=True)
     type_post = models.CharField(max_length=50, choices=post_types)
     creation = models.DateTimeField(auto_now_add=True)
     category = models.ManyToManyField(Category, through='PostCategory')
@@ -52,6 +54,9 @@ class Post(models.Model):
 
     def __str__(self):
         return f'{self.title.title()}:{self.preview()}'
+
+    def get_absolute_url(self):
+        return reverse('news_detail', args=[str(self.id)])
 
 
 class PostCategory(models.Model):
