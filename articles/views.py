@@ -1,8 +1,12 @@
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from .filters import NewsFilter
 from .models import Post, NEWS, ARTICLE
 from .forms import PostForm
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Group
+from django.contrib.auth.decorators import login_required
 
 
 class NewsList(ListView):
@@ -49,7 +53,8 @@ class NewsSearch(ListView):
         return context
 
 
-class NewsCreate(CreateView):
+class NewsCreate(PermissionRequiredMixin ,CreateView):
+    permission_required = ('articles.add_post',)
     form_class = PostForm
     model = Post
     template_name = 'news_edit.html'
@@ -59,7 +64,8 @@ class NewsCreate(CreateView):
         return super().form_valid(form)
 
 
-class ArticleCreate(CreateView):
+class ArticleCreate(PermissionRequiredMixin, CreateView):
+    permission_required = ('articles.add_post',)
     form_class = PostForm
     model = Post
     template_name = 'article_edit.html'
@@ -69,7 +75,8 @@ class ArticleCreate(CreateView):
         return super().form_valid(form)
 
 
-class NewsUpdate(UpdateView):
+class NewsUpdate(PermissionRequiredMixin, UpdateView):
+    permission_required = ('articles.change_post',)
     form_class = PostForm
     model = Post
     template_name = 'news_edit.html'
@@ -78,7 +85,8 @@ class NewsUpdate(UpdateView):
         return super().get_queryset().filter(type_post=NEWS)
 
 
-class ArticleUpdate(UpdateView):
+class ArticleUpdate(PermissionRequiredMixin, UpdateView):
+    permission_required = ('articles.change_post',)
     form_class = PostForm
     model = Post
     template_name = 'article_edit.html'
@@ -103,3 +111,19 @@ class ArticleDelete(DeleteView):
 
     def get_queryset(self):
         return super().get_queryset().filter(type_post=ARTICLE)
+
+class Profile(LoginRequiredMixin, TemplateView): # перенести в приложение для профиля
+    template_name = 'profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_author'] = not self.request.user.groups.filter(name='authors').exists()
+        return context
+
+@login_required()
+def upgrade_author(request):
+    user = request.user
+    authors_group = Group.objects.get(name='authors')
+    if not request.user.groups.filter(name='authors').exists():
+        authors_group.user_set.add(user)
+    return redirect('/')
