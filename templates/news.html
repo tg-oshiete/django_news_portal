@@ -10,7 +10,7 @@
     <h2>Новости:</h2>
     <hr>
     {% if news %}
-    <h5 align="left">Количество новостей: {{ news | length }}</h5>
+    <h5 align="left">Количество новостей на странице: {{ news | length }}</h5>
     <br>
         <table>
             <tr>
@@ -33,7 +33,9 @@
     {% if page_obj.has_previous %}
         <a href="?{% url_replace page=1 %}">1</a>
         {% if page_obj.previous_page_number != 1 %}
-            ...
+            {% if page_obj.previous_page_number != 2 %}
+                ...
+            {% endif %}
             <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
         {% endif %}
     {% endif %}
@@ -43,9 +45,26 @@
     {% if page_obj.has_next %}
         <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
         {% if page_obj.paginator.num_pages != page_obj.next_page_number %}
+            {% if page_obj.paginator.num_pages != page_obj.next_page_number|add:"1" %}
             ...
+            {% endif %}
             <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
         {% endif %}
     {% endif %}
+
+<hr>
+<h3>Подписаться на обновления в категориях: </h3>
+    {% for category in categories %}
+        <div>
+            {{ category.name }}
+            {% if user.is_authenticated %}
+                {% if user in category.subscribers.all %}
+                    <a href="{% url 'unsubscribe_category' category.id %}">Отписаться</a>
+                {% else %}
+                    <a href="{% url 'subscribe_category' category.id %}">Подписаться</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endfor %}
 
 {%endblock body%}

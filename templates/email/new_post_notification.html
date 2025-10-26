@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+    <h3> {{ post.content|truncatechars:50 }}</h3>
+    <h5> {{ post.creation|date:"d.m.Y" }}</h5>
+    <h6> Ссылка на новость - http://127.0.0.1:8000{{ post.get_absolute_url }}</h6>
+</body>
+</html>

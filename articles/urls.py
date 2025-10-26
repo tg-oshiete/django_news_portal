@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (NewsList, NewDetail, NewsSearch, NewsCreate, ArticleCreate, NewsUpdate,
-                    ArticleUpdate, ArticleDelete, NewsDelete, Profile, upgrade_author)
+                    ArticleUpdate, ArticleDelete, NewsDelete, Profile, upgrade_author, subscribe_category,
+                    unsubscribe_category, CategoryList, CategoryPosts)
 from django.views.generic.base import RedirectView
 
 
@@ -19,5 +20,9 @@ urlpatterns = [
     path('news/<int:pk>/delete/', NewsDelete.as_view(), name='news_delete'),
     path('article/<int:pk>/delete/', ArticleDelete.as_view(), name='article_delete'),
     path('profile/', Profile.as_view(), name='profile'), # перенести этот функционал в отдельное приложение для профиля
-    path('profile/upgrade/', upgrade_author, name='upgrade_author')
+    path('profile/upgrade/', upgrade_author, name='upgrade_author'),
+    path('category/<int:category_id>/subscribe', subscribe_category, name='subscribe_category'),
+    path('category/<int:category_id>/unsubscribe', unsubscribe_category, name='unsubscribe_category'),
+    path('category/', CategoryList.as_view(), name='category_list'),
+    path('category/<int:pk>/', CategoryPosts.as_view(), name='category_detail'),
 ]

@@ -30,6 +30,10 @@ class Author(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=125, unique=True)
+    subscribers = models.ManyToManyField(User, blank = True)
+
+    def __str__(self):
+        return self.name
 
 
 class Post(models.Model):
@@ -40,6 +44,7 @@ class Post(models.Model):
     title = models.TextField()
     content = models.TextField()
     rating = models.IntegerField(default=0)
+
 
     def like(self):
         self.rating += 1

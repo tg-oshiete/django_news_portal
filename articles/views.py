@@ -1,12 +1,20 @@
-from django.shortcuts import redirect
+from django.core.mail import EmailMultiAlternatives
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from .filters import NewsFilter
-from .models import Post, NEWS, ARTICLE
+from .models import Post, NEWS, ARTICLE, Author, Category
 from .forms import PostForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+import os
+from django.conf import settings
+from django.utils import timezone
+
+
+POSTS_PER_DAY = 3
 
 
 class NewsList(ListView):
@@ -26,6 +34,7 @@ class NewsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['filterset'] = self.filterset
+        context['categories'] = Category.objects.all()
         return context
 
 
@@ -59,9 +68,53 @@ class NewsCreate(PermissionRequiredMixin ,CreateView):
     model = Post
     template_name = 'news_edit.html'
 
+
     def form_valid(self, form):
+        if not hasattr(self.request.user, 'author'):
+            form.add_error(None, "Только авторы могут создавать посты")
+            return self.form_invalid(form)
+
+        author = self.request.user.author
+        form.instance.author = author
+
+        if Post.objects.filter(creation__date=timezone.now().date(), author_id = author).count() >= POSTS_PER_DAY:
+            form.add_error(None, f"Вы превысили дневной лимит постов! Максимум {POSTS_PER_DAY} в день")
+            return self.form_invalid(form)
+
+
         form.instance.type_post = NEWS
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        self.send_email_to_subscribers(form.instance)
+
+        return response
+
+    def send_email_to_subscribers(self, post):
+        categories = post.category.all()
+        all_subscribers_emails = set()
+
+        for category in categories:
+            subscribers = category.subscribers.all()
+            for subscriber in subscribers:
+                if subscriber.email:
+                    all_subscribers_emails.add(subscriber.email)
+
+
+        if all_subscribers_emails:
+            subject = f"Новая новость: {post.title}"
+            html_content = render_to_string('email/new_post_notification.html',{
+                'post': post, 'category': categories })
+
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body=post.preview(),  # Текстовая версия
+                from_email=settings.EMAIL_HOST_USER ,
+                to=list(all_subscribers_emails),
+            )
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+
+
 
 
 class ArticleCreate(PermissionRequiredMixin, CreateView):
@@ -71,8 +124,21 @@ class ArticleCreate(PermissionRequiredMixin, CreateView):
     template_name = 'article_edit.html'
 
     def form_valid(self, form):
+        if not hasattr(self.request.user, 'author'):
+            form.add_error(None, "Только авторы могут создавать посты")
+            return self.form_invalid(form)
+
+        author = self.request.user.author
+        form.instance.author = author
+
+        if Post.objects.filter(creation__date=timezone.now().date(), author_id = author).count() >= POSTS_PER_DAY:
+            form.add_error(None, f"Вы превысили дневной лимит постов!\nМаксимум {POSTS_PER_DAY} в день")
+            return self.form_invalid(form)
+
         form.instance.type_post = ARTICLE
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        return response
 
 
 class NewsUpdate(PermissionRequiredMixin, UpdateView):
@@ -117,7 +183,7 @@ class Profile(LoginRequiredMixin, TemplateView): # перенести в при�
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['is_not_author'] = not self.request.user.groups.filter(name='authors').exists()
+        context['is_author'] = hasattr(self.request.user, 'author')
         return context
 
 @login_required()
@@ -126,4 +192,48 @@ def upgrade_author(request):
     authors_group = Group.objects.get(name='authors')
     if not request.user.groups.filter(name='authors').exists():
         authors_group.user_set.add(user)
+
+    Author.objects.get_or_create(user=user)
+
     return redirect('/')
+
+@login_required
+def subscribe_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+
+    if request.user not in category.subscribers.all():
+        category.subscribers.add(request.user)
+
+    return redirect(request.META.get('HTTP_REFERER', 'news_list'))
+
+@login_required
+def unsubscribe_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+
+    if request.user in category.subscribers.all():
+        category.subscribers.remove(request.user)
+
+    return redirect(request.META.get('HTTP_REFERER', 'news_list'))
+
+
+class CategoryList(ListView):
+    model = Category
+    queryset = Category.objects.all()
+    template_name = 'categories.html'
+    context_object_name = 'categories'
+
+
+class CategoryPosts(ListView):
+    template_name = 'categories_posts.html'
+    context_object_name = 'news'
+    paginate_by = 10
+
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, id=self.kwargs['pk'])
+        return Post.objects.filter(category=self.category).order_by('-creation')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        # context['user'] = self.request.user
+        return context

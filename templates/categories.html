@@ -1,0 +1,15 @@
+{% extends 'flatpages/sample.html' %}
+
+{%block title%}
+    Categories
+{%endblock title%}
+
+{%block body%}
+    <h2>Категории:</h2>
+    <hr>
+    {% if categories %}
+        {% for category in categories %}
+            <h3><a href="{{request.build_absolute_uri}}{{category.id}}">{{ category.name }}</a></h3>
+        {% endfor %}
+    {% endif %}
+{%endblock body%}
