@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import ManyToManyField
 from django.urls import reverse
 
 
@@ -83,3 +84,14 @@ class Comment(models.Model):
     def dislike(self):
         self.rating -= 1
         self.save()
+
+
+class Notifications(models.Model):
+    name = models.CharField(max_length=250)
+    message = models.TextField()
+    creation = models.DateTimeField(auto_now_add=True)
+    delete_time = models.DateTimeField(null=True, blank=True, verbose_name = "Время удаления")
+    users = models.ManyToManyField(User, related_name='notifications')
+
+    def __str__(self):
+        return self.name

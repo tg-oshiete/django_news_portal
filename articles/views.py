@@ -1,9 +1,11 @@
 from django.core.mail import EmailMultiAlternatives
+from django.http import HttpResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from .filters import NewsFilter
-from .models import Post, NEWS, ARTICLE, Author, Category
+from .models import Post, NEWS, ARTICLE, Author, Category, Notifications
 from .forms import PostForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import Group
@@ -12,15 +14,13 @@ from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from django.utils import timezone
+from .tasks import send_notification
 
 
 POSTS_PER_DAY = 3
 
 
 class NewsList(ListView):
-    # model = Post
-    # ordering = "-creation"
-    # queryset = Post.objects.filter(type_post=NEWS).order_by('-creation') # прошлая реализация с выводом только новостей
     queryset = Post.objects.all().order_by('-creation')
     template_name = 'news.html'
     context_object_name = 'news'
@@ -84,6 +84,7 @@ class NewsCreate(PermissionRequiredMixin ,CreateView):
 
         form.instance.type_post = NEWS
         response = super().form_valid(form)
+        send_notification.delay(self.object.id)
         self.send_email_to_subscribers(form.instance)
 
         return response
@@ -112,9 +113,6 @@ class NewsCreate(PermissionRequiredMixin ,CreateView):
             )
             msg.attach_alternative(html_content, "text/html")
             msg.send()
-
-
-
 
 
 class ArticleCreate(PermissionRequiredMixin, CreateView):
@@ -237,3 +235,20 @@ class CategoryPosts(ListView):
         context['category'] = self.category
         # context['user'] = self.request.user
         return context
+
+
+class CeleryTest(View):
+    def get(self, request):
+        printer.apply_async([10], countdown=5)
+        hello.delay()
+        return HttpResponse('Hello!')
+
+
+class NotificationsList(ListView, LoginRequiredMixin):
+    model = Notifications
+    template_name = 'notifications.html'
+    context_object_name = 'notifications'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Notifications.objects.filter(users=self.request.user).order_by("-creation")

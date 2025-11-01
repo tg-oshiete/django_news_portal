@@ -1,0 +1,53 @@
+{% extends 'flatpages/sample.html' %}
+{% load custom_filters %}
+{% load custom_tags %}
+
+{%block title%}
+    News
+{%endblock title%}
+
+{%block body%}
+    <h2>Новости:</h2>
+    <hr>
+    {% if notifications %}
+    <br>
+        <table>
+            <tr>
+                <td>Название</td>
+                <td>Содержание</td>
+                <td>Дата</td>
+            </tr>
+            {% for notification in notifications %}
+            <tr>
+                <td>{{ notification.name }}</td>
+                <td>{{ notification.message }}</td>
+                <td>{{ notification.creation | date:'d M Y' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <h2>Уведомлений нет...</h2>
+    {% endif %}
+
+    {% if page_obj.has_previous %}
+        <a href="?{% url_replace page=1 %}">1</a>
+        {% if page_obj.previous_page_number != 1 %}
+            {% if page_obj.previous_page_number != 2 %}
+                ...
+            {% endif %}
+            <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+        {% endif %}
+    {% endif %}
+
+    {{ page_obj.number }}
+
+    {% if page_obj.has_next %}
+        <a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+        {% if page_obj.paginator.num_pages != page_obj.next_page_number %}
+            {% if page_obj.paginator.num_pages != page_obj.next_page_number|add:"1" %}
+            ...
+            {% endif %}
+            <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+        {% endif %}
+    {% endif %}
+{%endblock body%}

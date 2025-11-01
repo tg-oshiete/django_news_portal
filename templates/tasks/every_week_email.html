@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+    {% if posts %}
+        <h2>Новые новости, которые вы могли пропустить: </h2>
+        <br>
+        {% for post in posts %}
+            <h3><a href="http://127.0.0.1:8000{{ post.get_absolute_url }}">Название: {{ post.title }}</a></h3>
+            <h3>Содержание: {{ post.content|truncatechars:50 }}</h3>
+            <h4>{{ post.creation|date:"d.m.Y" }}</h4>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>За последние 2 дня новых публикаций не было</p>
+    {% endif %}
+</body>
+</html>
