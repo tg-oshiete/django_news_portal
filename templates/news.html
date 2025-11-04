@@ -52,19 +52,19 @@
         {% endif %}
     {% endif %}
 
-<hr>
-<h3>Подписаться на обновления в категориях: </h3>
-    {% for category in categories %}
-        <div>
-            {{ category.name }}
-            {% if user.is_authenticated %}
-                {% if user in category.subscribers.all %}
-                    <a href="{% url 'unsubscribe_category' category.id %}">Отписаться</a>
-                {% else %}
-                    <a href="{% url 'subscribe_category' category.id %}">Подписаться</a>
-                {% endif %}
-            {% endif %}
-        </div>
-    {% endfor %}
+<!--<hr>-->
+<!--<h3>Подписаться на обновления в категориях: </h3>-->
+<!--    {% for category in categories %}-->
+<!--        <div>-->
+<!--            {{ category.name }}-->
+<!--            {% if user.is_authenticated %}-->
+<!--                {% if user in category.subscribers.all %}-->
+<!--                    <a href="{% url 'unsubscribe_category' category.id %}">Отписаться</a>-->
+<!--                {% else %}-->
+<!--                    <a href="{% url 'subscribe_category' category.id %}">Подписаться</a>-->
+<!--                {% endif %}-->
+<!--            {% endif %}-->
+<!--        </div>-->
+<!--    {% endfor %}-->
 
 {%endblock body%}

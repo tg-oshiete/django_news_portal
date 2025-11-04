@@ -14,7 +14,8 @@ from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from django.utils import timezone
-from .tasks import send_notification
+from .tasks import send_notification, send_email_to_subscribers_task
+from django.core.cache import cache
 
 
 POSTS_PER_DAY = 3
@@ -44,6 +45,14 @@ class NewDetail(DetailView):
     template_name = 'new.html'
     context_object_name = 'new'
 
+    def get_object(self, *args, **kwargs): # no test
+        obj = cache.get(f'new-{self.kwargs["pk"]}', None)
+
+        if not obj:
+            obj = super().get_object(queryset=self.queryset)
+            cache.set(f'new-{self.kwargs["pk"]}', obj)
+
+        return obj
 
 class NewsSearch(ListView):
     queryset = Post.objects.all().order_by('-creation')
@@ -85,8 +94,8 @@ class NewsCreate(PermissionRequiredMixin ,CreateView):
         form.instance.type_post = NEWS
         response = super().form_valid(form)
         send_notification.delay(self.object.id)
-        self.send_email_to_subscribers(form.instance)
-
+        send_email_to_subscribers_task(self, self.object.id) # асинхронная реализация отправки email subscribers
+        # self.send_email_to_subscribers(form.instance)
         return response
 
     def send_email_to_subscribers(self, post):
@@ -98,7 +107,6 @@ class NewsCreate(PermissionRequiredMixin ,CreateView):
             for subscriber in subscribers:
                 if subscriber.email:
                     all_subscribers_emails.add(subscriber.email)
-
 
         if all_subscribers_emails:
             subject = f"Новая новость: {post.title}"

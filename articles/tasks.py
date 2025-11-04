@@ -50,3 +50,30 @@ def send_every_week_email(): # последними новостями буде�
     )
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+
+
+@shared_task
+def send_email_to_subscribers_task(self, post_id):
+    post = Post.objects.get(id = post_id)
+    categories = post.category.all()
+    all_subscribers_emails = set()
+
+    for category in categories:
+        subscribers = category.subscribers.all()
+        for subscriber in subscribers:
+            if subscriber.email:
+                all_subscribers_emails.add(subscriber.email)
+
+        if all_subscribers_emails:
+            subject = f"Новая новость: {post.title}"
+            html_content = render_to_string('email/new_post_notification.html',{
+                'post': post, 'category': categories })
+
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body=post.preview(),  # Текстовая версия
+                from_email=settings.EMAIL_HOST_USER ,
+                to=list(all_subscribers_emails),
+            )
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()

@@ -3,14 +3,11 @@ from .views import (NewsList, NewDetail, NewsSearch, NewsCreate, ArticleCreate, 
                     ArticleUpdate, ArticleDelete, NewsDelete, Profile, upgrade_author, subscribe_category,
                     unsubscribe_category, CategoryList, CategoryPosts, CeleryTest, NotificationsList)
 from django.views.generic.base import RedirectView
-
-
-# Некоторые имена было бы корректнее назвать иначе, но т.к. по тз стоят конкретные ссылки, но при этом не указаны
-# ссылки для статей, то функционал статей включен в /news, путем выбора категории публикации.
+from django.views.decorators.cache import cache_page
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/news/')),
-    path('news/', NewsList.as_view(), name='news_list'),
+    path('news/', cache_page(60)(NewsList.as_view()), name='news_list'),
     path('news/<int:pk>/', NewDetail.as_view(), name='news_detail'), # доступ к странице осуществляется по id самого поста с новостью
     path('news/search/', NewsSearch.as_view(), name='news_search'),
     path('news/create/', NewsCreate.as_view(), name='news_create'),
