@@ -217,3 +217,121 @@ CACHES = {
         # 'TIMEOUT': 20,
     }
 }
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'style' : '{',
+    'formatters': {
+        'task1_0': {
+            'format': '[%(asctime)s] %(levelname)s: %(message)s'
+        },
+        'task1_1': {
+            'format': '[%(asctime)s] %(levelname)s - %(pathname)s: %(message)s' # also for task5
+        },
+        'task1_2': {
+            'format': '[%(asctime)s] %(levelname)s - %(pathname)s - %(exc_info)s : %(message)s' # also for task3
+        },
+        'task2': {
+            'format': '[%(asctime)s] %(levelname)s %(module)s: %(message)s' # also for task4
+        }
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'debug_info_only': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda x: x.levelno <= logging.INFO
+        },
+        'warning_only': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda x: x.levelno == logging.WARNING
+        },
+        'error_critical_only': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda x: x.levelno >= logging.ERROR
+        }
+
+    },
+    'handlers': {
+        'console_debug': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true', 'debug_info_only'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'task1_0'
+        },
+        'console_warning': {
+            'level': 'WARNING',
+            'filters': ['require_debug_true', 'warning_only'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'task1_1'
+        },
+        'console_error': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true', 'error_critical_only'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'task1_2'
+        },
+        'general_file': {
+            'level': 'INFO',
+            'filters': ['require_debug_false'],
+            'class': 'logging.FileHandler',
+            'filename': 'general.log',
+            'formatter': 'task2'
+        },
+        'errors_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'errors.log',
+            'formatter': 'task1_2'
+        },
+        'security_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'security.log',
+            'formatter': 'task2',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'task1_1'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console_debug', 'console_warning', 'console_error', 'general_file'],
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['errors_file','mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['errors_file','mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['errors_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['errors_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['security_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
+}

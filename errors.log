@@ -1,0 +1,8 @@
+[2025-11-30 13:21:10,530] ERROR - <console> - (<class 'ZeroDivisionError'>, ZeroDivisionError('division by zero'), <traceback object at 0x0000022542588C40>) : пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+Traceback (most recent call last):
+  File "<console>", line 2, in <module>
+ZeroDivisionError: division by zero
+[2025-11-30 13:27:09,421] ERROR - <console> - (<class 'ZeroDivisionError'>, ZeroDivisionError('division by zero'), <traceback object at 0x0000012984D80300>) : Ошибка в запросе
+Traceback (most recent call last):
+  File "<console>", line 2, in <module>
+ZeroDivisionError: division by zero
